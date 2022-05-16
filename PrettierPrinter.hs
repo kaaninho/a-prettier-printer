@@ -2,6 +2,7 @@ module PrettierPrinter
   ( flatten
   , nest
   , nil
+  , (<>)
   )
 where
 
@@ -109,8 +110,8 @@ fillwords :: String -> DOC
 fillwords = folddoc (<+/>) . map text . words
 
 fill :: [DOC] -> DOC
-fill []      = nil
-fill [x]     = x
+fill []        = nil
+fill [x]       = x
 fill (x:y:zs)  = (flatten x <+> fill (flatten y : zs))
                  :<|>
                  (x </> fill (y : zs))
@@ -118,10 +119,10 @@ fill (x:y:zs)  = (flatten x <+> fill (flatten y : zs))
 
 -- Eigenes XML-Beispiel
 
-data XML = Elt String [Att] [XML]
+data XML = Element String [Attribute] [XML]
          | Txt String
 
-data Att = Att String String
+data Attribute = Attribute String String
 
 concatDOCs :: [DOC] -> DOC
 concatDOCs []      = nil
@@ -129,69 +130,60 @@ concatDOCs [x]     = x
 concatDOCs (x:xs)  = x </> concatDOCs xs
 
 
-attToDOC :: Att -> DOC
-attToDOC (Att k v) = text k <> text "=\"" <> text v <> text "\""
+attToDOC :: Attribute -> DOC
+attToDOC (Attribute key value) = text key <> text "=\"" <> text value <> text "\""
 
-tagToDOC :: String -> [Att] -> DOC
-tagToDOC n [] = text "<" <> text n <> text ">"
-tagToDOC n atts = group
-                    (text "<" <> text n <>
-                      (nest 2 (line <> concatDOCs (map attToDOC atts))) <>
-                      line <> text ">")
+tagToDOC :: String -> [Attribute] -> DOC
+tagToDOC name [] = text "<" <> text name <> text ">"
+tagToDOC name attributes = group
+                           (text "<" <> text name <>
+                            (nest 2 (line <> concatDOCs (map attToDOC attributes))) <>
+                            line <> text ">")
 
 
 
 xmlToDOC :: XML -> DOC
-xmlToDOC (Txt s)         = text s
-xmlToDOC (Elt n a xmls)  = group
-                             (tagToDOC n a </>
-                              nest 2 (group
-                                      line <>
-                                      concatDOCs (map xmlToDOC xmls)) <>
-                             line <>
-                             text "</" <> text n <> text ">")
+xmlToDOC (Txt string)                    = text string
+xmlToDOC (Element name attributes xmls)  = group
+                                           (tagToDOC name attributes </>
+                                            nest 2 (group line <>
+                                                    concatDOCs (map xmlToDOC xmls)) </>
+                                            text "</" <> text name <> text ">")
 
 
 -- XML
-xml   = Elt "p" [
-          Att "color" "red",
-          Att "font" "Times",
-          Att "size" "10"
+xml   = Element "p" [
+          Attribute "color" "red",
+          Attribute "font" "Times",
+          Attribute "size" "10"
         ] [
           Txt "Here is some",
-          Elt "em" [] [Txt "emphasized"],
-          Txt "Text",
-          Txt "Here is a",
-          Elt "a" [Att "href" "http://example.org"]
+          Element "em" [] [Txt "emphasized"],
+          Txt "Text. Here is a",
+          Element "a" [Attribute "href" "http://example.org"]
             [Txt "link"],
           Txt "elsewhere."
           ]
 
-
-
-------------------------------
--- Blogpost 2
-------------------------------
-
 -- XML example from Paper
-showXML :: XML -> DOC
-showXML x  = folddoc (<>) (showXMLs x)
+-- showXML :: XML -> DOC
+-- showXML x  = folddoc (<>) (showXMLs x)
 
-showXMLs :: XML -> [DOC]
-showXMLs (Elt n a [])  = [text "<" <> showTag n a <> text "/>"]
-showXMLs (Elt n a c)   = [text "<" <> showTag n a <> text ">" <>
-                          showFill showXMLs c <>
-                          text "</" <> text n <> text ">"]
-showXMLs (Txt s)       = map text (words s)
+-- showXMLs :: XML -> [DOC]
+-- showXMLs (Elt n a [])  = [text "<" <> showTag n a <> text "/>"]
+-- showXMLs (Elt n a c)   = [text "<" <> showTag n a <> text ">" <>
+--                           showFill showXMLs c <>
+--                           text "</" <> text n <> text ">"]
+-- showXMLs (Txt s)       = map text (words s)
 
-showAtt :: Att -> [DOC]
-showAtt (Att k v) = [text k <> text "=" <> text (quoted v)]
+-- showAtt :: Att -> [DOC]
+-- showAtt (Att k v) = [text k <> text "=" <> text (quoted v)]
 
-quoted v = "\"" ++ v ++ "\""
+-- quoted v = "\"" ++ v ++ "\""
 
-showTag :: String -> [Att] -> DOC
-showTag n a = text n <> showFill showAtt a
+-- showTag :: String -> [Att] -> DOC
+-- showTag n a = text n <> showFill showAtt a
 
-showFill :: (a -> [DOC]) -> [a] -> DOC
-showFill f [] = nil
-showFill f xs = bracket "" (fill (concat (map f xs))) ""
+-- showFill :: (a -> [DOC]) -> [a] -> DOC
+-- showFill f [] = nil
+-- showFill f xs = bracket "" (fill (concat (map f xs))) ""

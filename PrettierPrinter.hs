@@ -6,6 +6,8 @@ module PrettierPrinter
   )
 where
 
+import Prelude hiding ((<>))
+
 infixr 5 :<|>
 infixr 6 :<>
 infixr 6 <>

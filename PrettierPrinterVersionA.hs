@@ -1,7 +1,6 @@
 module PrettierPrinter
   (
---    flatten
-  nest
+    nest
   , nil
   , (<>)
   )
@@ -79,7 +78,6 @@ doc3 = text "Hallo" <> line <> line
                   <> text "- und Zeilenumbrüche"
                   <> nest 2 (line <> text "- enthalten"))
 
-
 -- `group` mit `flatten` und `<|>`
 
 infixr 6 <|>
@@ -96,28 +94,22 @@ flatten (Union doc1 doc2) = flatten doc1
 group :: Doc -> Doc
 group doc = flatten doc <|> doc
 
+best :: Int -> Int -> Doc -> Doc
+best width charsUsed Nil               = Nil
+best width charsUsed (Text str doc)    = Text str (best width (charsUsed + length str) doc)
+best width charsUsed (Line n doc)      = Line n (best width (width - n) doc)
+best width charsUsed (Union doc1 doc2) = better width charsUsed
+                                                (best width charsUsed doc1)
+                                                (best width charsUsed doc2)
+                                                
+better :: Int -> Int -> Doc -> Doc -> Doc
+better width charsUsed doc1 doc2 = if fits (width - charsUsed) doc1 then doc1 else doc2
 
-           
+fits :: Int -> Doc -> Bool
+fits charsLeft _ | charsLeft < 0 = False
+fits _ Nil                       = True
+fits _ (Line _ doc)              = True
+fits charsLeft (Text str doc)    = fits (charsLeft - length str) doc
 
--- XML example from Paper
--- showXML :: XML -> DOC
--- showXML x  = folddoc (<>) (showXMLs x)
-
--- showXMLs :: XML -> [DOC]
--- showXMLs (Elt n a [])  = [text "<" <> showTag n a <> text "/>"]
--- showXMLs (Elt n a c)   = [text "<" <> showTag n a <> text ">" <>
---                           showFill showXMLs c <>
---                           text "</" <> text n <> text ">"]
--- showXMLs (Txt s)       = map text (words s)
-
--- showAtt :: Att -> [DOC]
--- showAtt (Att k v) = [text k <> text "=" <> text (quoted v)]
-
--- quoted v = "\"" ++ v ++ "\""
-
--- showTag :: String -> [Att] -> DOC
--- showTag n a = text n <> showFill showAtt a
-
--- showFill :: (a -> [DOC]) -> [a] -> DOC
--- showFill f [] = nil
--- showFill f xs = bracket "" (fill (concat (map f xs))) ""
+pretty :: Int -> Doc -> Doc
+pretty width doc = best width 0 doc

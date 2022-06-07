@@ -9,7 +9,7 @@ Dieser ist während der Arbeit an zwei Blogposts:
 
 1. [Aufgehübscht! --
    Pretty-Printing](https://funktionale-programmierung.de/2020/08/06/prettier-printer.html)
-2. [Pretty-Printing II -- Laziness FTW]
+2. [Pretty-Printing II -- Laziness FTW](https://funktionale-programmierung.de/2022/05/30/prettier-printer-2.html)
 
 entstanden. Zum zweiten Blogpost passt die Implementierung
 `PrettierPrinterBlogpost2.hs`. Die andere ist noch weiter optimiert.
@@ -30,4 +30,4 @@ I wrote two (german) blog post about this pretty printer here
 
 and here
 
-[Pretty-Printing II -- Laziness FTW]
+[Pretty-Printing II -- Laziness FTW](https://funktionale-programmierung.de/2022/05/30/prettier-printer-2.html)
